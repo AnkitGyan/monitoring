@@ -14,6 +14,13 @@ const activeRequestsGauge = new promClient.Gauge({
   help : "Number of active HTTP requests"
 })
 
+
+const httpRequestDurationInMilliseconds = new promClient.Histogram({
+  name:"http_request_duration_ms",
+  help:"Duration of HTTP requests in ms",
+  labelNames: ['methods', 'route', 'statuscode'],
+  buckets:[0.1, 5, 15, 50, 100, 200, 300, 400, 500, 1000]
+})
 const middleware = (req, res, next)=>{
   activeRequestsGauge.inc();
   const starttime = Date.now();
@@ -25,6 +32,8 @@ const middleware = (req, res, next)=>{
     activeRequestsGauge.dec();
   })
 
+  httpRequestDurationInMilliseconds.observe({methods: req.method, route : req.path, statuscode: res.statusCode}, Date.now() - starttime);
+
   next();
 }
 
@@ -33,9 +42,9 @@ app.use(middleware);
 
 
 app.get("/cpu",async (req, res)=>{
-  await new Promise(resolve=> setTimeout(resolve, 10000))
+  await new Promise(resolve=> setTimeout(resolve, 1000))
 
-  res.json({ cpuUsage: cpuUsageAfter });
+  res.json({ cpuUsag: process.cpuUsage() });
 })
 
 
