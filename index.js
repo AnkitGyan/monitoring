@@ -21,6 +21,7 @@ const httpRequestDurationInMilliseconds = new promClient.Histogram({
   labelNames: ['methods', 'route', 'statuscode'],
   buckets:[0.1, 5, 15, 50, 100, 200, 300, 400, 500, 1000]
 })
+
 const middleware = (req, res, next)=>{
   activeRequestsGauge.inc();
   const starttime = Date.now();
@@ -29,7 +30,7 @@ const middleware = (req, res, next)=>{
     const endtime = Date.now();
     console.log(`Request took ${endtime - starttime} ms`);
     requestCounter.inc({ methods: req.method, route: req.path, statuscode: res.statusCode });
-    activeRequestsGauge.dec();
+    activeRequestsGauge.dec(); 
   })
 
   httpRequestDurationInMilliseconds.observe({methods: req.method, route : req.path, statuscode: res.statusCode}, Date.now() - starttime);
